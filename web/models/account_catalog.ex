@@ -2,6 +2,8 @@ defmodule Mustang.AccountCatalog do
   use Ecto.Model
   use Timex
 
+  alias Mustang.AccountCatalogNode
+
   schema "accounting_account_catalogs" do
     field :rfc, :string
     field :year, :integer
@@ -25,56 +27,44 @@ defmodule Mustang.AccountCatalog do
     client = Mustang.SecurityClient.fetch(rfc)
     nodes = Mustang.Xml.query_multiple('/catalogocuentas:Catalogo/catalogocuentas:Ctas',xml_doc)
     
+    IO.inspect to_string(Mustang.Xml.query('/catalogocuentas:Catalogo/@Certificado',xml_doc))
+
+    file_name = rfc <> to_string(year) <> to_string(month) <> "CT"
 
     catalog = %Mustang.AccountCatalog{rfc: rfc,
                                      year: year,
                                     month: month,
                                      seal: to_string(Mustang.Xml.query('/catalogocuentas:Catalogo/@Sello',xml_doc)),
                        certificate_number: to_string(Mustang.Xml.query('/catalogocuentas:Catalogo/@noCertificado',xml_doc)),
-                              certificate: "certificado",
-                               created_at: {{2015, 10, 12}, {0, 37, 14}},
-                               updated_at: {{2015, 10, 12}, {0, 37, 14}},
-                           xml_attachment: "Aqui la url",
+                              certificate: "TEST",
+                               created_at: :calendar.universal_time(),
+                               updated_at: :calendar.universal_time(),
+                           xml_attachment: file_name <> ".xml",
                                   xml_url: "STORED FROM PROXY",
-                           zip_attachment: "Aqui se tiene que generar el zip",
+                           zip_attachment: file_name <> ".zip",
                                 client_id: client.id}
     saved_catalog = Mustang.Repo.insert(catalog)
     add_accounts_nodes(nodes,saved_catalog.id)
-    %{id: saved_catalog.id,rfc: saved_catalog.rfc, year: year, month: month}
+
+    %{id: saved_catalog.id, type: "account_catalog", attachment_name: file_name}
   end
 
   def add_accounts_nodes([],_), do: []
 
   def add_accounts_nodes([head | tail],catalog_id) do
-    [save_node(head,catalog_id) | add_accounts_nodes(tail,catalog_id)]
-  end
-
-  def save_node(node, catalog_id) do
-    {level,_} = :string.to_integer(Mustang.Xml.query('//@Nivel',node))
-    catalog_node = %Mustang.AccountCatalogNode{account_number: to_string(Mustang.Xml.query('//@NumCta',node)),
-                                               sub_account_of: format_node(Mustang.Xml.query('//@SubCtaDe',node)),
-                                                   group_code: to_string(Mustang.Xml.query('//@CodAgrup',node)),
-                                                        level: level,
-                                                       nature: to_string(Mustang.Xml.query('//@Natur',node)),
-                                                  description: to_string(Mustang.Xml.query('//@Desc',node)),
-                                                   created_at: {{2015, 10, 12}, {0, 37, 14}},
-                                                   updated_at: {{2015, 10, 12}, {0, 37, 14}},
-                                           account_catalog_id: catalog_id}
-    Mustang.Repo.insert(catalog_node)
-  end
-
-  def format_node (value) do
-    case value do
-      [] -> nil
-      value -> to_string(value)
-    end
+    [AccountCatalogNode.save(head,catalog_id) | add_accounts_nodes(tail,catalog_id)]
   end
 
   def find_period(year,month) do
     query = from c in Mustang.AccountCatalog,
-          where: c.year == ^year and c.month == ^month,
+          where: c.year == ^year and c.month == ^month and not is_nil(c.seal),
          select: c
-    [_|_] = Mustang.Repo.all(query)
+    case  Mustang.Repo.all(query) do
+      [] ->
+        []
+      [head|tail] ->
+        [head|tail]  
+    end
   end
 
   def update_catalogs([]), do: []

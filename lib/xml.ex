@@ -23,6 +23,16 @@ defmodule Mustang.Xml do
       [] -> []
     end
   end
+
+  def is_account_catalog(xml_catalog) do
+    case Mustang.Xml.query('/catalogocuentas:Catalogo/@RFC',xml_catalog) do
+      [] -> 
+        false
+      _ -> 
+        true
+    end    
+  end
+
   
 
 end
