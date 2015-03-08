@@ -27,8 +27,9 @@ defmodule Mustang.Catalog do
     case Mustang.Xml.query('/BCE:Balanza/@RFC',xml_catalog) do
       [] -> []
       _ -> 
-        BalanceCatalog.save(xml_catalog) 
-        IO.puts "Nodo de balanzas encontrado se procede al guardado en base de datos"
+        BalanceCatalog.save(xml_catalog)
+          |> Storage.write_xml(raw_file) 
+          |> Storage.generate_zip 
     end
   end
 

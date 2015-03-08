@@ -1,8 +1,11 @@
 defmodule Mustang.Storage do
 
   def write_xml(catalog,file) do
-    path = catalog.type <> "/xml_attachment/" <> to_string(catalog.id) <> "/"
-    zip_path = catalog.type <> "/zip_attachment/" <> to_string(catalog.id) <> "/"
+    conf = Application.get_env(:mustang, :accounting_paths)
+    {storage_path, _} = Keyword.pop(conf, :storage_path)
+
+    path = storage_path <> catalog.type <> "/xml_attachment/" <> to_string(catalog.id) <> "/"
+    zip_path = storage_path <> catalog.type <> "/zip_attachment/" <> to_string(catalog.id) <> "/"
     File.mkdir_p(path)
     xml_path = path <> catalog.attachment_name <> ".xml"
     File.write(xml_path ,file)

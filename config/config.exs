@@ -19,6 +19,14 @@ config :mustang, Mustang.Repo,
   password: "RakuRaku1",
   hostname: "213.239.208.26"
 
+#configures accounting issue service
+config :mustang, :accounting_issue_service,
+  issue_url: "http://213.239.208.26:8180/signDocument/api/v1/firmar"
+
+#configures accounting storage paths
+config :mustang, :accounting_paths,
+  storage_path: "/Users/misaelperezchamorro/Documents/"
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

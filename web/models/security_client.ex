@@ -15,7 +15,7 @@ defmodule Mustang.SecurityClient do
     query = from c in Mustang.SecurityClient,
           where: c.rfc == ^rfc,
          select: c
-    [head|tail] = Mustang.Repo.all(query)
+    [head|_] = Mustang.Repo.all(query)
     head
   end
 
