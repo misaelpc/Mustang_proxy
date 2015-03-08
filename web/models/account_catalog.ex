@@ -10,7 +10,7 @@ defmodule Mustang.AccountCatalog do
     field :month, :integer
     field :seal, :string
     field :certificate_number, :string
-    field :certificate, :string
+    field :certificate, :binary
     field :created_at, :datetime
     field :updated_at, :datetime
     field :xml_attachment, :string
@@ -21,22 +21,23 @@ defmodule Mustang.AccountCatalog do
 
   def save(xml_doc) do
     {year,_} = :string.to_integer(Mustang.Xml.query('/catalogocuentas:Catalogo/@Anio',xml_doc))
-    {month,_} = :string.to_integer(Mustang.Xml.query('/catalogocuentas:Catalogo/@Mes',xml_doc))
-    find_period(year,month) |> update_catalogs 
+    string_month = Mustang.Xml.query('/catalogocuentas:Catalogo/@Mes',xml_doc)
+    {month,_} = :string.to_integer(string_month)
     rfc = to_string(Mustang.Xml.query('/catalogocuentas:Catalogo/@RFC',xml_doc))
     client = Mustang.SecurityClient.fetch(rfc)
+    find_period(year,month,client.id) |> update_catalogs 
     nodes = Mustang.Xml.query_multiple('/catalogocuentas:Catalogo/catalogocuentas:Ctas',xml_doc)
     
-    IO.inspect to_string(Mustang.Xml.query('/catalogocuentas:Catalogo/@Certificado',xml_doc))
+    certificate = to_string(Mustang.Xml.query('/catalogocuentas:Catalogo/@Certificado',xml_doc))
 
-    file_name = rfc <> to_string(year) <> to_string(month) <> "CT"
+    file_name = rfc <> to_string(year) <> to_string(string_month) <> "CT"
 
     catalog = %Mustang.AccountCatalog{rfc: rfc,
                                      year: year,
                                     month: month,
                                      seal: to_string(Mustang.Xml.query('/catalogocuentas:Catalogo/@Sello',xml_doc)),
                        certificate_number: to_string(Mustang.Xml.query('/catalogocuentas:Catalogo/@noCertificado',xml_doc)),
-                              certificate: "TEST",
+                              certificate: certificate,
                                created_at: :calendar.universal_time(),
                                updated_at: :calendar.universal_time(),
                            xml_attachment: file_name <> ".xml",
@@ -55,9 +56,9 @@ defmodule Mustang.AccountCatalog do
     [AccountCatalogNode.save(head,catalog_id) | add_accounts_nodes(tail,catalog_id)]
   end
 
-  def find_period(year,month) do
+  def find_period(year,month,client_id) do
     query = from c in Mustang.AccountCatalog,
-          where: c.year == ^year and c.month == ^month and not is_nil(c.seal),
+          where: c.client_id == ^client_id and c.year == ^year and c.month == ^month and not is_nil(c.seal),
          select: c
     case  Mustang.Repo.all(query) do
       [] ->

@@ -2,6 +2,7 @@ defmodule Mustang.Catalog do
   
   alias Mustang.Storage 
   alias Mustang.AccountCatalog
+  alias Mustang.BalanceCatalog
 
   def save(xml,raw_file)do
     case Mustang.Xml.read(xml) do
@@ -25,7 +26,9 @@ defmodule Mustang.Catalog do
   def is_balance_catalog(xml_catalog, raw_file) do
     case Mustang.Xml.query('/BCE:Balanza/@RFC',xml_catalog) do
       [] -> []
-      _ -> IO.puts "Nodo de cuentas encontrado se procede al guardado en base de datos"
+      _ -> 
+        BalanceCatalog.save(xml_catalog) 
+        IO.puts "Nodo de balanzas encontrado se procede al guardado en base de datos"
     end
   end
 
