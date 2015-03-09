@@ -9,13 +9,14 @@ defmodule Mustang.Storage do
     File.mkdir_p(path)
     xml_path = path <> catalog.attachment_name <> ".xml"
     File.write(xml_path ,file)
-    %{xml_path: xml_path, zip_path: zip_path, file_name: catalog.attachment_name}
+    %{xml_file: file, zip_path: zip_path, file_name: catalog.attachment_name}
   end
 
   def generate_zip (attachment) do
     File.mkdir_p(attachment.zip_path)
     compress_path = attachment.zip_path <> attachment.file_name <> ".zip"
-    :zip.create(to_char_list(compress_path), [to_char_list(attachment.xml_path)])
+    xml_name = attachment.file_name <> ".xml"
+    :zip.create(to_char_list(compress_path), [{to_char_list(xml_name),attachment.xml_file}])
   end
     
 end

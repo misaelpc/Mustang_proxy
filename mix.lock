@@ -15,4 +15,5 @@
   "ssl_verify_hostname": {:hex, :ssl_verify_hostname, "1.0.1"},
   "tds": {:hex, :tds, "0.1.6"},
   "tds_ecto": {:hex, :tds_ecto, "0.1.4"},
-  "timex": {:hex, :timex, "0.12.9"}}
+  "timex": {:hex, :timex, "0.12.9"},
+  "uuid": {:hex, :uuid, "0.1.5"}}
